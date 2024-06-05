@@ -27,6 +27,7 @@ app.post(
 app.post("/auth/login", userController.login);
 
 app.get("/films", videoController.getAllFilms);
+app.get("/films/:id", videoController.getFilm);
 
 app.listen(4444, (error) => {
   if (error) {
