@@ -28,6 +28,10 @@ app.post("/auth/login", userController.login);
 
 app.get("/films", videoController.getAllFilms);
 app.get("/films/:id", videoController.getFilm);
+app.get("/serials", videoController.getAllSerials);
+app.get("/serials/:id", videoController.getSerial);
+app.get("/anime", videoController.getAllAnime);
+app.get("/anime/:id", videoController.getAnime);
 
 app.listen(4444, (error) => {
   if (error) {
