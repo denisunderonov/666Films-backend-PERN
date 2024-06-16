@@ -32,6 +32,9 @@ app.get("/serials", videoController.getAllSerials);
 app.get("/serials/:id", videoController.getSerial);
 app.get("/anime", videoController.getAllAnime);
 app.get("/anime/:id", videoController.getAnime);
+app.get("/genres", videoController.getGenres);
+app.get("/getrecomends", videoController.getRecommendations);
+app.post("/recomendations", videoController.updateRecommendations);
 
 app.listen(4444, (error) => {
   if (error) {
