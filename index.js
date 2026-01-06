@@ -8,7 +8,26 @@ import jwt from 'jsonwebtoken';
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+// CORS настройки - разрешаем все для начала, потом ограничим
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:3000',
+  'http://localhost:4444'
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // Разрешаем запросы без origin (например, Postman, curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 
 pool
   .connect()
@@ -19,17 +38,18 @@ pool
     console.error("БД не работает: ", error);
   });
 
-  const authenticateToken = (req, res, next) => {
-    const token = req.headers.authorization.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'Токен отсутствует' });
-  
-    jwt.verify(token, 'secretTOKENMAN', (err, user) => {
-      if (err) return res.status(403).json({ message: 'Неверный токен' });
-  
-      req.user = user;
-      next();
-    });
-  };
+const authenticateToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: 'Токен отсутствует' });
+
+  const jwtSecret = process.env.JWT_SECRET || 'secretTOKENMAN';
+  jwt.verify(token, jwtSecret, (err, user) => {
+    if (err) return res.status(403).json({ message: 'Неверный токен' });
+
+    req.user = user;
+    next();
+  });
+};
 
 app.post(
   "/auth/register",
@@ -49,17 +69,19 @@ app.get("/genres", videoController.getGenres);
 app.get("/getrecomends", videoController.getRecommendations);
 app.post("/recomendations", videoController.updateRecommendations);
 app.post("/changepassword", userController.changePassword); 
-app.post("/watched/add", authenticateToken, videoController.addToWatch)
-app.post("/watched/remove", authenticateToken, videoController.removeFromWatch)
+app.post("/watched/add", authenticateToken, videoController.addToWatch);
+app.post("/watched/remove", authenticateToken, videoController.removeFromWatch);
 app.get("/watched/:type/:id", authenticateToken, videoController.isWatched);
 app.get("/watched", videoController.getWatched);
-app.get("/watched/check/:route/:id", videoController.checkIfWatched)
+app.get("/watched/check/:route/:id", videoController.checkIfWatched);
 
+// Динамический порт для Railway/Render
+const PORT = process.env.PORT || 4444;
 
-app.listen(4444, (error) => {
+app.listen(PORT, (error) => {
   if (error) {
     console.error("Ошибка запуска сервера: ", error);
   }
 
-  console.log("Сервер запустился");
+  console.log(`Сервер запустился на порту ${PORT}`);
 });

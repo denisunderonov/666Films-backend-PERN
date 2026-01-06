@@ -1,13 +1,12 @@
 import pkg from 'pg'
-import { bdURL } from './var.js';
 const { Pool } = pkg;
 
+// Поддержка как DATABASE_URL (для Railway), так и локальных настроек
 const pool = new Pool({
-    user: 'postgres', 
-    host: `${bdURL}`, 
-    database: 'courseDB', 
-    password: 'Denimz13', 
-    port: 5432,
-  });
+  connectionString: process.env.DATABASE_URL || 
+    'postgresql://postgres:Denimz13@localhost:5432/courseDB',
+  ssl: process.env.NODE_ENV === 'production' ? 
+    { rejectUnauthorized: false } : false
+});
   
 export default pool;
